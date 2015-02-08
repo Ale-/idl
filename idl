@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# idl
+# An image downloading bash script. 
+# Inspired by Darrin Goodman's Image Downloader 
+# See [http://www.hilltopyodeler.com/scripts/imageDownloader.txt].
+# Copyright (c) 2014 Ale González
+
+# This software is free; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License version 2.1 as published by the Free Software Foundation. 
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
+ 
+# You should have received a copy of the GNU Lesser General
+# Public License along with this library; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+# Boston, MA 02111-1307 USA
+
+#
+# help dialog 
+#
+function displayHelp()
+{
+cat <<EOF
+        Usage:      idl example.com
+        Purpose:    idl is intended to download all images in an url. Needs lynx and awk to parse the document properly.
+          
+        -h           Show HELP (this output)
+EOF
+}
+
+#
+# getopts
+#
+while getopts :h option
+do
+    case "$option" in
+        h)
+		 displayHelp
+         exit
+	     ;;
+	    *)
+		 echo Invalid option -$OPTARG
+		 echo 
+		 displayHelp
+		 exit 1
+		 ;;
+	    ?)
+         echo This command needs an option
+		 echo 
+		 displayHelp
+		 exit 1
+		 ;;
+    esac
+done
+
+#
+# checks
+#
+which lynx > /dev/null
+if [ $? == 1 ]; then
+    echo This script needs lynx to parse the document. Install it!
+    exit
+fi
+
+which awk > /dev/null
+if [ $? == 1 ]; then
+    echo This script needs awk to parse the document. Install it!
+    exit
+fi
+
+if [ $OPTIND -eq 0 ]; then 
+        echo No options were passed
+        echo    
+        displayHelp
+        exit
+elif [ $OPTIND -gt 1 ]; then
+        echo Use one target only, please
+        echo
+        displayHelp
+        exit
+fi
+
+#
+# do it
+#
+lynx -image_links --dump $1 | awk '{if( $2 ~ /^http.*\.(png|PNG|jpg|JPG|jpeg|JPEG|tif|tiff|TIF|TIFF)$/ ) print "wget "$2""}' | sh
+
+
